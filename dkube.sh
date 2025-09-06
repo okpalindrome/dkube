@@ -4,8 +4,12 @@
 directory=""
 namespace=""
 active_resource=()
+scan_checkov="false" # In the future, this must be handled using an array with actual argument input (tool name) 
 
 declare -A UNIQUE_IMAGES
+
+# Import SAST modules
+source ./SAST/sast-checkov.sh
 
 # Function to display usage information
 usage() {
@@ -15,6 +19,7 @@ usage() {
     echo "Options:"
     echo "  -d, --dir           Specify the directory to use to store the result."
     echo "  -n, --namespace     Specify the namespace to query [optional]."
+    echo "  -s, --sast          Perform SAST scan using Checkov [optional]."
     echo "  -h, --help          Display this help message."
     exit 1
 }
@@ -66,7 +71,7 @@ grab_images() {
     save_images
 }
 
-query_active_resources () {
+query_active_resources() {
     
     resource=$1
     
@@ -129,6 +134,10 @@ while [[ "$#" -gt 0 ]]; do
             namespace="$2"
             shift 2
         ;;
+        -s|--sast)
+            scan_checkov="true"
+            shift
+        ;;
         -h|--help)
             usage
         ;;
@@ -139,6 +148,7 @@ while [[ "$#" -gt 0 ]]; do
     esac
 done
 
+directory="${directory%/}"
 
 if [[ -z "$directory" || ! -d "$directory" ]]; then
     echo "Provide directory or given directory does not exist!"
@@ -170,5 +180,11 @@ grab_images "$dest"
 
 # find active resources/objects
 api_resources
-echo ""
-echo -e "\e[1mCompleted: $dest\e[0m"
+
+# call sast tools
+if [ "$scan_checkov" == "true" ]; then
+    sast-checkov "$dest"
+fi
+
+
+echo -e "\n\e[1mCompleted: $dest \e[0m"
