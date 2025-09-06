@@ -1,10 +1,11 @@
 # dkube
 
-Crawls the static information from a specific namespace in Kubernetes. 
+Crawls the static information from a specific namespace in Kubernetes and performs SAST scan locally.
 
 - Get all unique Docker images.
 - List all actively used resources.
 - Crawl the yaml from each active resources.
+- Crawled manifest files will be scanned using SAST tool [Checkov](https://github.com/bridgecrewio/checkov). You can also feed these files to more SAST tools like [kube-score](https://github.com/zegl/kube-score), etc. to better facilitate your Pentest.
 - Store all the above information in a directory structure.
 
 ```
@@ -13,45 +14,50 @@ Crawls the static information from a specific namespace in Kubernetes.
             manifest_resource-name.yaml
    -- resource 2
             manifest_resource-name.yaml
-   docker_images.txt
-   active_resources.txt
-   available_api_resources.txt
+   -- sast-tool-name
+            vul_id.txt
+            <namespace>-resources.yaml
+            unique_findings.txt
+    docker_images.txt
+    active_resources.txt
+    available_api_resources.txt
 ```
 
 - This acts as a snapshot of the environment.
-- You can feed the results to perform SAST scan using [Kube-linter](https://github.com/stackrox/kube-linter), [kube-score](https://github.com/zegl/kube-score), [checkov](https://github.com/bridgecrewio/checkov), etc.
 - Also, using [docker-multi-scan](https://github.com/okpalindrome/docker-multi-scan) you can scan the images using Grype, Trivy and Docker-scout at once.
 
 
 ### Usage
 ```
 $ chmod +x dkube.sh
-$ ./dkube.sh          
+$ ./dkube.sh -h
 
 Usage: ./dkube.sh
 
 Options:
   -d, --dir           Specify the directory to use to store the result.
   -n, --namespace     Specify the namespace to query [optional].
+  -s, --sast          Perform SAST scan using Checkov [optional].
   -h, --help          Display this help message.
 ```
 ### Example
 ```
-./dkube.sh -d .
-Querying current context's namespace: asteroid-destroyer
+./dkube.sh -d /home/kali/Documents/github-tools-payloads/dkube/ -n monitoring -s
 Fetching Docker images from various objects...
-Found 11 images in deployments...
-Found 24 images in pods...
-Found 104 images in replicasets...
-Total unique images:  57
+Found 3 images in deployments...
+Found 3 images in statefulsets...
+Found 1 images in daemonsets...
+Found 8 images in pods...
+Found 13 images in replicasets...
+Total unique images:  7
 
- Checking resources [176/176]
+ Checking resources [35/35] 
 
-Total active resources you can query: 17
-Completed: ./asteroid-destroyer
+Total active resources you can query: 14
+
+Total vulnerabilities found: 18
+ Querying individual findings [18/18] 
+Completed: /home/kali/Documents/github-tools-payloads/dkube/monitoring 
 ```
 
-Note - You can use `dos2unix dkube.sh` for any CRLF errors.
-
-#### Todo
-- Scan for misconfigurations (leads) using well-known SAST tools locally to better facilitate the Pentest quickly.
+Note - For any CRLF errors, use `dos2unix dkube.sh`
