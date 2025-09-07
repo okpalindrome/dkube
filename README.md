@@ -26,6 +26,9 @@ Crawls the static information from a specific namespace in Kubernetes and perfor
 - This acts as a snapshot of the environment.
 - Also, using [docker-multi-scan](https://github.com/okpalindrome/docker-multi-scan) you can scan the images using Grype, Trivy and Docker-scout at once.
 
+### Prequisites
+- kubectl cli tool
+- Kube-config file at `~/.kube/config`
 
 ### Usage
 ```
